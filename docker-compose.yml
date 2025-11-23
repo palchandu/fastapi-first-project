@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:13
+    # Load environment variables from .env (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB)
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER:-fastapi_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-fastapi1234}
+      POSTGRES_DB: ${DB_NAME:-fastapi_db}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+
+  web:
+    build: .
+    # Load same .env so web can read APP_HOST/APP_PORT or DB connection info if needed
+    env_file:
+      - .env
+    # Use environment substitution for host/port so you can configure them from .env
+    command: >
+      uvicorn main:app --host ${APP_HOST:-0.0.0.0} --port ${APP_PORT:-8000}
+    ports:
+      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+    depends_on:
+      - db
